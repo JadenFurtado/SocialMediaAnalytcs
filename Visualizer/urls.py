@@ -4,6 +4,6 @@ from . import views
 
 urlpatterns = [
     path('', views.index),
-    path('miserables/',views.miserables),
-    path('search',views.draggable)
+    path('search/miserables/',views.miserables),
+    path('search/',views.draggable)
 ]
