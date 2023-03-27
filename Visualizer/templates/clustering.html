@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+    .node {
+        stroke: #fff;
+        stroke-width: 1.5px;
+    }
+
+    .link {
+        stroke: #999;
+        stroke-opacity: .6;
+    }
+
+    /* 
+    button#clusterButton {
+        margin-left: 50px;
+        margin-top: 50px;
+        font-size: 20pt;
+    } */
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
+    integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+<body>
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark">
+        <!-- Brand -->
+        <a class="navbar-brand" href="#">SMA</a>
+
+        <!-- Toggler/collapsibe Button -->
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Navbar links -->
+        <div class="collapse navbar-collapse" id="collapsibleNavbar">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Module3/">Module3</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container">
+        Search Term <input class="input" type="text" id="searchTerm"><button id="Search"
+            class="btn btn-danger">Search</button> <button id="clusterButton" type="button" class="btn">Cluster</button>
+    </div>
+    <script>
+            // $.ajax({
+            //     url:"/search/miserables?search="+searchTerm,
+            //     success:function(data){
+            //         console.log(data);
+            //     }
+            // });
+        
+    </script>
+    <div id="graph"></div>
+
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+
+    <script type="text/javascript" src="https://unpkg.com/netclustering@0.0.3/dist/netClustering.js">   </script>
+    <!-- <script type="text/javascript" src="groupInABox.js">   </script> -->
+    <script>
+
+        var width = 960,
+            height = 500;
+
+        var color = d3.scale.category20();
+
+        var force = d3.layout.force()
+            .charge(-120)
+            .linkDistance(30)
+            .size([width, height]);
+        var svg = d3.select("#graph").append("svg")
+            .attr("width", width)
+            .attr("height", height);
+            // $("#Search").click(function () {
+            // //console.log("1");
+            // var searchTerm = $("#searchTerm").val();
+            //location.replace("/search/?search=" + searchTerm);
+        
+            d3.json("/search/miserables/", function (error, graph) {
+            console.log(error)
+            force
+                .nodes(graph.nodes)
+                .links(graph.links)
+                .start();
+
+            var link = svg.selectAll(".link")
+                .data(graph.links)
+                .enter().append("line")
+                .attr("class", "link")
+                .style("stroke-width", function (d) { return Math.sqrt(d.value); });
+
+            var node = svg.selectAll(".node")
+                .data(graph.nodes)
+                .enter().append("circle")
+                .attr("class", "node")
+                .attr("r", 5)
+                .call(force.drag);
+
+            node.append("title")
+                .text(function (d) { return d.name; });
+
+            force.on("tick", function () {
+                link.attr("x1", function (d) { return d.source.x; })
+                    .attr("y1", function (d) { return d.source.y; })
+                    .attr("x2", function (d) { return d.target.x; })
+                    .attr("y2", function (d) { return d.target.y; });
+
+                node.attr("cx", function (d) { return d.x; })
+                    .attr("cy", function (d) { return d.y; });
+            });
+
+            d3.select("#clusterButton").on("click", function () {
+
+                /******************/
+                /*  Clustering    */
+                /******************/
+                netClustering.cluster(graph.nodes, graph.links);
+
+                svg.selectAll(".node").transition().duration(2000).style("fill", function (d) { return color(d.cluster); });
+            });
+        });
+    // });
+        // $("#Search").click(function () {
+        //     //console.log("1");
+        //     var searchTerm = $("#searchTerm").val();
+        //     //location.replace("/search/?search=" + searchTerm);
+        //     $.ajax({
+        //         url:"/search/miserables?search="+searchTerm,
+        //         success:function(data){
+        //             d3.json(data, function (error, graph) {
+        //     console.log(error)
+        //     force
+        //         .nodes(graph.nodes)
+        //         .links(graph.links)
+        //         .start();
+
+        //     var link = svg.selectAll(".link")
+        //         .data(graph.links)
+        //         .enter().append("line")
+        //         .attr("class", "link")
+        //         .style("stroke-width", function (d) { return Math.sqrt(d.value); });
+
+        //     var node = svg.selectAll(".node")
+        //         .data(graph.nodes)
+        //         .enter().append("circle")
+        //         .attr("class", "node")
+        //         .attr("r", 5)
+        //         .call(force.drag);
+
+        //     node.append("title")
+        //         .text(function (d) { return d.name; });
+
+        //     force.on("tick", function () {
+        //         link.attr("x1", function (d) { return d.source.x; })
+        //             .attr("y1", function (d) { return d.source.y; })
+        //             .attr("x2", function (d) { return d.target.x; })
+        //             .attr("y2", function (d) { return d.target.y; });
+
+        //         node.attr("cx", function (d) { return d.x; })
+        //             .attr("cy", function (d) { return d.y; });
+        //     });
+
+        //     d3.select("#clusterButton").on("click", function () {
+
+        //         /******************/
+        //         /*  Clustering    */
+        //         /******************/
+        //         netClustering.cluster(graph.nodes, graph.links);
+
+        //         svg.selectAll(".node").transition().duration(2000).style("fill", function (d) { return color(d.cluster); });
+        //     });
+        // });
+        //         }
+        //     });
+        // });
+    </script>
+    <div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Post Id</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Posted at</th>
+                    <th scope="col">Handle</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr>
+                    <td scope="row">{{row.post_id}}</td>
+                    <td>{{row.description}}</td>
+                    <td>{{row.cts}}</td>
+                    <td>{{row.profile_id}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
